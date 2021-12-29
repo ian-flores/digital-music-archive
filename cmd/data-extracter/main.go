@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	spotifyutils "github.com/ian-flores/puerto-rico-digital-music-archive/pkg/spotifyutils"
+	spotifyutils "github.com/ian-flores/digital-music-archive/pkg/spotifyutils"
 
 	"cloud.google.com/go/firestore"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"

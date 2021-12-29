@@ -1,4 +1,4 @@
-module github.com/ian-flores/puerto-rico-digital-music-archive
+module github.com/ian-flores/digital-music-archive
 
 go 1.17
 
