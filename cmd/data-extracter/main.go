@@ -9,6 +9,8 @@ import (
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2/clientcredentials"
 
+	spotifyutils "github.com/ian-flores/puerto-rico-digital-music-archive/pkg/spotifyutils"
+
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
@@ -27,37 +29,12 @@ func main() {
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
+
 	// Bad Bunny Spotify ID: 4q3ewBCX7sLwd24euuV69X
-	artist, err := client.GetArtist(ctx, spotify.ID("4q3ewBCX7sLwd24euuV69X"))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		return
-	}
 
-	fmt.Println("Artist name:", artist.Name)
-	fmt.Println("Followers:", artist.Followers.Count)
-
-	albums, err := client.GetArtistAlbums(ctx, artist.ID, nil)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		return
-	}
-
-	for _, album := range albums.Albums {
-		fmt.Println(album.Name)
-
-		tracks, err := client.GetAlbumTracks(ctx, album.ID, spotify.Market("US"))
-
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			return
-		}
-
-		for _, track := range tracks.Tracks {
-			fmt.Println("\t", track.ID, ":", track.Name)
-		}
-
-	}
+	artistData, err := spotifyutils.GetArtistData(ctx, client, "4q3ewBCX7sLwd24euuV69X")
+	fmt.Println("Artist name:", artistData.ArtistName)
+	fmt.Println("Followers:", artistData.ArtistFollowers)
+	fmt.Println("Artist Collaborators:", artistData.ArtistCollaborators)
 
 }
