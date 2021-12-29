@@ -1,1 +1,1 @@
-# puerto-rico-digital-music-archive
+# digital-music-archive
