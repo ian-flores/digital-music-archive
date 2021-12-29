@@ -8,9 +8,12 @@ import (
 
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2/clientcredentials"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	spotifyutils "github.com/ian-flores/puerto-rico-digital-music-archive/pkg/spotifyutils"
 
+	"cloud.google.com/go/firestore"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
@@ -28,13 +31,49 @@ func main() {
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient)
+	spotifyClient := spotify.New(httpClient)
 
+	defer httpClient.CloseIdleConnections()
 	// Bad Bunny Spotify ID: 4q3ewBCX7sLwd24euuV69X
 
-	artistData, err := spotifyutils.GetArtistData(ctx, client, "4q3ewBCX7sLwd24euuV69X")
+	artistData, err := spotifyutils.GetArtistData(ctx, spotifyClient, "4q3ewBCX7sLwd24euuV69X")
 	fmt.Println("Artist name:", artistData.ArtistName)
-	fmt.Println("Followers:", artistData.ArtistFollowers)
-	fmt.Println("Artist Collaborators:", artistData.ArtistCollaborators)
 
+	firestoreClient := createClient(ctx)
+
+	defer firestoreClient.Close()
+
+	doc_string := fmt.Sprintf("artists/%s", artistData.ArtistID)
+	fmt.Println(doc_string)
+	firestoreDoc := firestoreClient.Doc(doc_string)
+
+	if _, err := firestoreDoc.Get(ctx); status.Code(err) == codes.NotFound {
+		wr, err := firestoreDoc.Set(ctx,
+			map[string]interface{}{
+				"name":          artistData.ArtistName,
+				"followers":     artistData.ArtistFollowers,
+				"songs":         artistData.ArtistSongs,
+				"collaborators": artistData.ArtistCollaborators,
+			},
+		)
+
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(wr.UpdateTime)
+	}
+
+}
+
+func createClient(ctx context.Context) *firestore.Client {
+	// Sets your Google Cloud Platform project ID.
+	projectID := "digital-music-archive"
+
+	client, err := firestore.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+	// Close client when done with
+	// defer client.Close()
+	return client
 }
